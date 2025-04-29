@@ -61,4 +61,8 @@ Task:
 
 4. Handle Input Discrepancies
    - If `duration_weeks` conflicts with the outline’s granularity, either merge/split or ask for clarification.
+
+<current plan>
+{plan}
+</current plan>
 """

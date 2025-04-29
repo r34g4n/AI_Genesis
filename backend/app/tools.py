@@ -10,7 +10,6 @@ from langgraph.prebuilt import InjectedState, InjectedStore
 from langgraph.store.base import BaseStore
 from langgraph.types import Command
 from tavily import AsyncTavilyClient
-from trustcall import create_extractor
 
 from app.configuration import State
 from app.prompts import LEARNING_PLANNER
@@ -42,37 +41,18 @@ async def update_learning_plan_canvas(
         temperature=0.5,
         max_retries=2,
     )
-    # bound = llm.with_structured_output(LearningPlan)
+    bound = llm.with_structured_output(LearningPlan)
 
-    bound = create_extractor(llm, tools=[LearningPlan])
-
-    if state.learning_plan:
-        response = await bound.ainvoke(
-            {
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": LEARNING_PLANNER,
-                    },
-                    {
-                        "role": "user",
-                        "content": content,
-                    },
-                ],
-                "existing": {"LearningPlan": state.learning_plan.model_dump()},
-            }
-        )
-    else:
-        response = await bound.ainvoke(("system", LEARNING_PLANNER), ("user", content))
-    data = response["responses"][0]
+    system_message = LEARNING_PLANNER.format(plan=state.learning_plan.model_dump() if state.learning_plan else None)
+    response = await bound.ainvoke(("system", system_message), ("user", content))
     return Command(
         update={
             # update the state keys
-            "learning_plan": data,
+            "learning_plan": response,
             # update the message history
             "messages": [
                 ToolMessage(
-                    {"plan": data.model_dump(mode="json"), "message": "learning plan canvas has also been successfully updated!"},
+                    {"plan": response.model_dump(mode="json"), "message": "learning plan canvas has also been successfully updated!"},
                     tool_call_id=tool_call_id,
                 )
             ],
