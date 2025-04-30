@@ -71,3 +71,10 @@ def format_sources(
             formatted_text += f"Full source content limited to {max_tokens_per_source} tokens: {raw_content}\n\n"
 
     return formatted_text.strip()
+
+def merge_search_results(left: list[dict] | dict | None, right: list[dict] | dict | None) -> list[dict]:
+    if not isinstance(left, list):
+        left = [left]
+    if not isinstance(right, list):
+        right = [right]
+    return (left or []).extend(right or [])

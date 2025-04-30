@@ -6,9 +6,12 @@ import os
 from dataclasses import dataclass, fields
 from typing import Annotated, Any, Optional
 
+from langchain_core.messages import AnyMessage
 from langchain_core.runnables import RunnableConfig
-from langgraph.graph.message import MessagesState
-from schema import LearningPlan
+from langgraph.graph.message import add_messages
+
+from app.schema import LearningPlan
+from app.utils import merge_search_results
 
 
 @dataclass(kw_only=True)
@@ -27,14 +30,8 @@ class Configuration:
         return cls(**{k: v for k, v in values.items() if v})
 
 
-def merge_search_results(left: list[dict] | dict | None, right: list[dict] | dict | None) -> list[dict]:
-    if not isinstance(left, list):
-        left = [left]
-    if not isinstance(right, list):
-        right = [right]
-    return (left or []).extend(right or [])
-
-
-class State(MessagesState):
-    learning_plan: Annotated[LearningPlan | None, lambda left, right: left if right is None else right]
-    search_results: Annotated[list[dict] | None, lambda left, right: merge_search_results(left, right)]
+@dataclass
+class State:
+    messages: Annotated[list[AnyMessage], add_messages]
+    learning_plan: Annotated[LearningPlan | None, lambda left, right: left if right is None else right] = None
+    search_results: list[dict] | None = None

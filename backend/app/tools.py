@@ -1,31 +1,37 @@
 import asyncio
 from typing import Annotated
 
+from google.genai.types import GoogleSearch, Tool
 from langchain_core.messages import ToolMessage
-from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langchain_core.tools.base import InjectedToolCallId
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langgraph.prebuilt import InjectedState, InjectedStore
-from langgraph.store.base import BaseStore
+from langgraph.prebuilt import InjectedState
 from langgraph.types import Command
 from tavily import AsyncTavilyClient
+from trustcall import create_extractor
 
 from app.configuration import State
 from app.prompts import LEARNING_PLANNER
 from app.schema import LearningPlan
-from app.utils import deduplicate_sources, format_sources
+from app.utils import deduplicate_sources, format_sources, merge_search_results
+
+
 
 # Search
 
 tavily_async_client = AsyncTavilyClient()
 
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.0-flash",
+    temperature=0.5,
+    max_retries=2,
+)
+
 
 @tool
 async def update_learning_plan_canvas(
     tool_call_id: Annotated[str, InjectedToolCallId],
-    config: RunnableConfig,
-    store: Annotated[BaseStore, InjectedStore],
     state: Annotated[State, InjectedState],
     content: str,
 ):
@@ -36,23 +42,27 @@ async def update_learning_plan_canvas(
         content: learning plan or updated instructions
     """
 
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash",
-        temperature=0.5,
-        max_retries=2,
-    )
-    bound = llm.with_structured_output(LearningPlan)
+    # bound = llm.with_structured_output(LearningPlan)
+    bound = create_extractor(llm, tools=[LearningPlan])
 
-    system_message = LEARNING_PLANNER.format(plan=state.learning_plan.model_dump() if state.learning_plan else None)
-    response = await bound.ainvoke(("system", system_message), ("user", content))
+    response = await bound.ainvoke([("system", LEARNING_PLANNER), ("user", content)])
+    data = response["responses"][0] if response["responses"] else response
+
+    print("*" * 80)
+    print(data)
+    print("*" * 80)
+
     return Command(
         update={
             # update the state keys
-            "learning_plan": response,
+            "learning_plan": data,
             # update the message history
             "messages": [
                 ToolMessage(
-                    {"plan": response.model_dump(mode="json"), "message": "learning plan canvas has also been successfully updated!"},
+                    {
+                        "plan": data.model_dump(mode="json"),
+                        "message": "learning plan canvas successfully updated, no need to echo the same plan to user!",
+                    },
                     tool_call_id=tool_call_id,
                 )
             ],
@@ -63,6 +73,7 @@ async def update_learning_plan_canvas(
 @tool
 async def web_research(
     tool_call_id: Annotated[str, InjectedToolCallId],
+    state: Annotated[State, InjectedState],
     queries: list[str],
 ):
     """
@@ -87,11 +98,12 @@ async def web_research(
     # Deduplicate and format sources
     deduplicated_search_docs = deduplicate_sources(search_docs)
     source_str = format_sources(deduplicated_search_docs, max_tokens_per_source=1000, include_raw_content=True)
+    search_results = merge_search_results(state.search_results, search_docs)
 
     return Command(
         update={
             # update the state keys
-            "search_results": search_docs,
+            "search_results": search_results,
             # update the message history
             "messages": [
                 ToolMessage(

@@ -1,0 +1,9 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "2024:2024"
+    volumes:
+      - ./backend/app:/app/app
+    env_file:
+      - ./backend/.env
