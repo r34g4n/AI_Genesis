@@ -3,7 +3,6 @@ from typing import Dict, List, Literal, cast
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
-from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END
 from langgraph.graph.message import StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
@@ -13,17 +12,15 @@ from app import tools
 from app.configuration import Configuration, State
 from app.prompts import LEARNING_RESEARCHER
 
-model = init_chat_model("google_genai:gemini-2.5-flash-preview-04-17", temperature=0.5, max_retries=2)
+model = init_chat_model("google_genai:gemini-2.0-flash", temperature=0.5, max_retries=2)
 _tools = [
     tools.read_learning_plan_canvas,
     tools.update_learning_plan_canvas,
     tools.web_research,
 ]
 
-checkpointer = MemorySaver()
 
-
-async def make_graph(config: RunnableConfig):
+async def make_graph():
     async def call_model(state: State, config: RunnableConfig) -> Dict[str, List[AIMessage]]:
         bound = model.bind_tools(_tools)
         while True:

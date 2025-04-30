@@ -41,4 +41,5 @@ ENV PYTHONPATH="/app"
 # Reset the entrypoint, don't invoke `uv`
 ENTRYPOINT []
 
-CMD uv run langgraph dev --no-browser --allow-blocking --host 0.0.0.0 --port 2024
+# CMD uv run langgraph dev --no-browser --allow-blocking --host 0.0.0.0 --port 2024
+CMD ["/app/.venv/bin/fastapi", "run", "app/server.py", "--port", "2024", "--host", "0.0.0.0"]

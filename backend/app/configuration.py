@@ -11,7 +11,6 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.graph.message import add_messages
 
 from app.schema import LearningPlan
-from app.utils import merge_search_results
 
 
 @dataclass(kw_only=True)

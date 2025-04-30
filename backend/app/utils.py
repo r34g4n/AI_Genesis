@@ -72,6 +72,7 @@ def format_sources(
 
     return formatted_text.strip()
 
+
 def merge_search_results(left: list[dict] | dict | None, right: list[dict] | dict | None) -> list[dict]:
     if not isinstance(left, list):
         left = [left]

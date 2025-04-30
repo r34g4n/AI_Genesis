@@ -1,4 +1,22 @@
 services:
+  db:
+    restart: unless-stopped
+    image: pgvector/pgvector:pg16
+    healthcheck:
+      test: pg_isready -U $POSTGRES_USER
+      start_interval: 1s
+      start_period: 5s
+      interval: 5s
+      retries: 5
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
   backend:
     build: ./backend
     ports:
@@ -8,3 +26,6 @@ services:
       - ./.langgraph_api:/app/.langgraph_api
     env_file:
       - ./backend/.env
+
+volumes:
+  db_data:

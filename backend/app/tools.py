@@ -13,14 +13,14 @@ from trustcall import create_extractor
 from app.configuration import State
 from app.prompts import LEARNING_PLANNER
 from app.schema import LearningPlan
-from app.utils import deduplicate_sources, format_sources, merge_search_results
+from app.utils import deduplicate_sources, format_sources
 
 # Search
 
 tavily_async_client = AsyncTavilyClient()
 
 llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash-preview-04-17",
+    model="gemini-2.0-flash",
     temperature=0.7,
     max_retries=5,
 )
@@ -59,7 +59,7 @@ async def update_learning_plan_canvas(
     return Command(
         update={
             # update the state keys
-            "learning_plan": data,
+            "learning_plan": data.model_dump(mode="json"),
             # update the message history
             "messages": [
                 ToolMessage(
@@ -99,12 +99,11 @@ async def web_research(
     # Deduplicate and format sources
     deduplicated_search_docs = deduplicate_sources(search_docs)
     source_str = format_sources(deduplicated_search_docs, max_tokens_per_source=1000, include_raw_content=True)
-    search_results = merge_search_results(state.search_results, search_docs)
 
     return Command(
         update={
             # update the state keys
-            "search_results": search_results,
+            "search_results": search_docs,
             # update the message history
             "messages": [
                 ToolMessage(
