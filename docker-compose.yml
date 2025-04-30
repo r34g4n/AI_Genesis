@@ -19,6 +19,8 @@ services:
 
   backend:
     build: ./backend
+    depends_on:
+      - db
     ports:
       - "2024:2024"
     volumes:

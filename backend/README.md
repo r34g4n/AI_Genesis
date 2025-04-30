@@ -21,9 +21,18 @@ This is the backend service for AI Genesis, a learning research assistant powere
    uv sync --all-packages
    ```
 5. Copy the `.env.example` file to `.env` and fill in the required API keys (see API Keys section below)
-6. Start the langgraph dev server:
+6. Start the langgraph dev server - useful for debugging the agent:
    ```bash
    uv run langgraph dev
+   ```
+   alternatively you can run the app using docker:
+   ```bash
+   docker compose up -d backend
+   ```
+
+7. Start the FastAPI server:
+   ```bash
+   fastapi run app.server:app --reload
    ```
    alternatively you can run the app using docker:
    ```bash
@@ -48,6 +57,7 @@ The backend requires several API keys to function properly. Here's how to obtain
   - `configuration.py`: Configuration and state definition
   - `schema.py`: Data models and schemas
   - `utils.py`: Utility functions
+  - `server.py`: Server entry point
 
 
 - API docs in http://127.0.0.1:2024/docs

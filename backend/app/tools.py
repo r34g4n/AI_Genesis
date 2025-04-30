@@ -1,5 +1,5 @@
 import asyncio
-from typing import Annotated
+from typing import Annotated, Dict
 
 from langchain_core.messages import ToolMessage
 from langchain_core.tools import tool
@@ -34,7 +34,10 @@ async def read_learning_plan_canvas(
     """
     Call this tool when you need to read the learning plan canvas.
     """
-    return state.learning_plan.model_dump(mode="json") if state.learning_plan else None
+    learning_plan = state.learning_plan
+    if isinstance(learning_plan, dict):
+        return learning_plan
+    return learning_plan.model_dump(mode="json") if learning_plan else None
 
 
 @tool
@@ -59,7 +62,7 @@ async def update_learning_plan_canvas(
     return Command(
         update={
             # update the state keys
-            "learning_plan": data.model_dump(mode="json"),
+            "learning_plan": data if isinstance(data, dict) else data.model_dump(mode="json"),
             # update the message history
             "messages": [
                 ToolMessage(
