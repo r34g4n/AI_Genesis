@@ -27,6 +27,17 @@ llm = ChatGoogleGenerativeAI(
 
 
 @tool
+async def read_learning_plan_canvas(
+    tool_call_id: Annotated[str, InjectedToolCallId],
+    state: Annotated[State, InjectedState],
+):
+    """
+    Call this tool when you need to read the learning plan canvas.
+    """
+    return state.learning_plan.model_dump(mode="json") if state.learning_plan else None
+
+
+@tool
 async def update_learning_plan_canvas(
     tool_call_id: Annotated[str, InjectedToolCallId],
     state: Annotated[State, InjectedState],
