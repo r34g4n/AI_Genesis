@@ -1,7 +1,6 @@
 import asyncio
 from typing import Annotated
 
-from google.genai.types import GoogleSearch, Tool
 from langchain_core.messages import ToolMessage
 from langchain_core.tools import tool
 from langchain_core.tools.base import InjectedToolCallId
@@ -16,16 +15,14 @@ from app.prompts import LEARNING_PLANNER
 from app.schema import LearningPlan
 from app.utils import deduplicate_sources, format_sources, merge_search_results
 
-
-
 # Search
 
 tavily_async_client = AsyncTavilyClient()
 
 llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash",
-    temperature=0.5,
-    max_retries=2,
+    model="gemini-2.5-flash-preview-04-17",
+    temperature=0.7,
+    max_retries=5,
 )
 
 
@@ -48,10 +45,6 @@ async def update_learning_plan_canvas(
     response = await bound.ainvoke([("system", LEARNING_PLANNER), ("user", content)])
     data = response["responses"][0] if response["responses"] else response
 
-    print("*" * 80)
-    print(data)
-    print("*" * 80)
-
     return Command(
         update={
             # update the state keys
@@ -59,10 +52,7 @@ async def update_learning_plan_canvas(
             # update the message history
             "messages": [
                 ToolMessage(
-                    {
-                        "plan": data.model_dump(mode="json"),
-                        "message": "learning plan canvas successfully updated, no need to echo the same plan to user!",
-                    },
+                    "learning canvas successfully updated, no need to echo the same plan to user!",
                     tool_call_id=tool_call_id,
                 )
             ],

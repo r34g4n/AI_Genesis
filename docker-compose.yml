@@ -5,5 +5,6 @@ services:
       - "2024:2024"
     volumes:
       - ./backend/app:/app/app
+      - ./.langgraph_api:/app/.langgraph_api
     env_file:
       - ./backend/.env
