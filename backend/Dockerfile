@@ -16,17 +16,14 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-
 # Install the project's dependencies using the lockfile and settings
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --frozen --no-install-project --no-dev
 
-
 # Then, add the rest of the project source code and install it
 # Installing separately from its dependencies allows optimal layer caching
-
 
 # Copy the project into the image
 ADD . /app
@@ -41,5 +38,8 @@ ENV PYTHONPATH="/app"
 # Reset the entrypoint, don't invoke `uv`
 ENTRYPOINT []
 
-# CMD uv run langgraph dev --no-browser --allow-blocking --host 0.0.0.0 --port 2024
-CMD ["/app/.venv/bin/fastapi", "run", "app/server.py", "--port", "2024", "--host", "0.0.0.0"]
+# Use the PORT environment variable provided by Cloud Run, defaulting to 2024 if not set
+ENV PORT=${PORT:-2024}
+
+# CMD to run the application using the PORT environment variable
+CMD ["/bin/sh", "-c", "/app/.venv/bin/fastapi run app/server.py --port $PORT --host 0.0.0.0"]

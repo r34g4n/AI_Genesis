@@ -26,7 +26,8 @@ const serviceAdapter = new ExperimentalEmptyAdapter();
 const runtime = new CopilotRuntime({
   remoteEndpoints: [
     // Our FastAPI endpoint URL
-    { url: "http://localhost:2024/copilotkit" },
+    // { url: "http://localhost:2024/copilotkit" },
+    { url: `${process.env.LANGGRAPH_DEPLOYMENT_URL|| "http://localhost:2024"}/copilotkit` },
   ],
 });
 
