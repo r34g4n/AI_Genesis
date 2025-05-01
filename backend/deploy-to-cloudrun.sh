@@ -79,7 +79,7 @@ gcloud run deploy $SERVICE_NAME \
     --cpu $CPU \
     --port $PORT \
     --min-instances=1 \
-    --max-instances=1 \
+    --max-instances=2 \
     --set-env-vars="DATABASE_URI=$DATABASE_URI" \
     --set-env-vars="GOOGLE_API_KEY=$GOOGLE_API_KEY" \
     --set-env-vars="LANGSMITH_API_KEY=$LANGSMITH_API_KEY" \
